@@ -46,7 +46,18 @@ $home_image_1_right_link = function_exists('get_field') ? esc_html(get_field('ho
 $home_image_1_bottom_link = function_exists('get_field') ? esc_html(get_field('home_image_1_bottom_link')) : '';
 $home_image_1_bottom = function_exists('get_field') ? esc_html(get_field('home_image_1_bottom')) : '';
 
-
+/** Ordered PNG sequence for scroll-driven hero (images/hero_frame). */
+$hero_frame_urls = array();
+$hero_frame_dir = get_template_directory() . '/images/hero_frame';
+if (is_dir($hero_frame_dir)) {
+    $hero_frame_files = glob($hero_frame_dir . '/Crystal_particle_effects_*.png');
+    if (!empty($hero_frame_files)) {
+        natsort($hero_frame_files);
+        foreach (array_values($hero_frame_files) as $hero_frame_path) {
+            $hero_frame_urls[] = get_template_directory_uri() . '/images/hero_frame/' . basename($hero_frame_path);
+        }
+    }
+}
 
 
 
@@ -122,7 +133,8 @@ $home_image_1_bottom = function_exists('get_field') ? esc_html(get_field('home_i
         </div>
     </section>
     <!-- Hero Section -->
-    <section class="snap-section hero-section" id="hero">
+    <section class="snap-section hero-section<?php echo !empty($hero_frame_urls) ? ' hero-section--frames' : ''; ?>"
+        id="hero">
         <?php
 
         if (!empty($promo_title)): ?>
@@ -145,20 +157,46 @@ $home_image_1_bottom = function_exists('get_field') ? esc_html(get_field('home_i
             </div>
         <?php endif; ?>
 
-        <!-- Main Hero Content -->
-
-        <div class="hero-content hero">
-            <div class="hero-text">
-                <div class="hero-text-container">
-                    <h1>At Mell Luxe...</h1>
-                    <h2>... nature meets luxury in every handcrafted product.</h2>
+        <!-- Main Hero Content: full-bleed frame + constrained copy -->
+        <div class="hero-stage">
+            <?php if (!empty($hero_frame_urls)) : ?>
+                <div class="hero-frame" data-hero-frames="<?php echo esc_attr(wp_json_encode($hero_frame_urls)); ?>"
+                    data-active-layer="a" aria-hidden="true">
+                    <?php $hero_first = esc_url($hero_frame_urls[0]); ?>
+                    <img src="<?php echo $hero_first; ?>" alt="" class="hero-frame-layer hero-frame-layer--a"
+                        id="hero-frame-display" width="1920" height="1080" loading="eager" decoding="async"
+                        fetchpriority="high">
+                    <img src="<?php echo $hero_first; ?>" alt="" class="hero-frame-layer hero-frame-layer--b"
+                        width="1920" height="1080" loading="eager" decoding="async" aria-hidden="true">
                 </div>
+            <?php else : ?>
+                <img src="<?php echo get_template_directory_uri(); ?>/images/assets/hero.png" alt="Mell Luxe"
+                    class="hero-image">
+            <?php endif; ?>
+            <div class="hero-content hero">
+                <div class="hero-text">
+                    <div class="hero-text-container">
+                        <h1 class="hero-text-sr-only">At Mell Luxe...</h1>
+                        <h2 class="hero-text-sr-only">... nature meets luxury in every handcrafted product.</h2>
+                        <svg class="hero-svg-text" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"
+                            viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid meet" focusable="false">
+                            <g class="hero-svg-line hero-svg-line--1">
+                                <text class="hero-svg-tline hero-svg-tline--1" x="0" y="108"
+                                    font-family="Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                                    font-weight="300" fill="currentColor"><?php echo esc_html('At Mell Luxe...'); ?></text>
+                            </g>
+                            <g class="hero-svg-line hero-svg-line--2">
+                                <text class="hero-svg-tline hero-svg-tline--2" x="0" y="198"
+                                    font-family="Montserrat, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                                    font-weight="300" fill="currentColor"><?php echo esc_html('... nature meets luxury in every handcrafted product.'); ?></text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                <a href="<?php echo esc_url(home_url('/product-category/all-products/')) ; ?>" class="hero-cta-button">
+                    SHOP <span>→</span>
+                </a>
             </div>
-            <img src="<?php echo get_template_directory_uri(); ?>/images/assets/hero.png" alt="Mell Luxe"
-                class="hero-image">
-            <a href="<?php echo esc_url(home_url('/product-category/all-products/')) ; ?>" class="hero-cta-button">
-                SHOP <span>→</span>
-            </a>
         </div>
     </section>
     <section class="info-1">

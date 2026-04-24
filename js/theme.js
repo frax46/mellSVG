@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function () {
     initMobileMenu();
     initScrollAnimations();
     initSnapScrolling();
+    initHeroFrameSequence();
+    initHeroSvgText();
     initContactForm();
     initBackToTop();
     initFloatingElements();
@@ -301,6 +303,171 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
         }
+    }
+
+    /**
+     * Home page hero: full-width frame sequence, pinned until scrub completes (no ghosting — double buffer).
+     */
+    function initHeroFrameSequence() {
+        var wrap = document.querySelector('#hero.hero-section--frames .hero-frame');
+        if (!wrap) {
+            return;
+        }
+        var raw = wrap.getAttribute('data-hero-frames');
+        if (!raw) {
+            return;
+        }
+        var frames;
+        try {
+            frames = JSON.parse(raw);
+        } catch (e) {
+            return;
+        }
+        if (!frames.length) {
+            return;
+        }
+        var layers = wrap.querySelectorAll('.hero-frame-layer');
+        if (layers.length < 2) {
+            return;
+        }
+        var layerA = layers[0];
+        var layerB = layers[1];
+        var frontIsA = true;
+
+        var current = -1;
+        var swapGen = 0;
+
+        function applyActiveLayer(showA) {
+            wrap.setAttribute('data-active-layer', showA ? 'a' : 'b');
+            frontIsA = showA;
+        }
+
+        function setFrame(index) {
+            var idx = Math.max(0, Math.min(frames.length - 1, index));
+            if (idx === current) {
+                return;
+            }
+            if (current < 0 && idx === 0) {
+                current = 0;
+                applyActiveLayer(true);
+                return;
+            }
+            var gen = ++swapGen;
+            var url = frames[idx];
+            var visibleEl = frontIsA ? layerA : layerB;
+            var hiddenEl = frontIsA ? layerB : layerA;
+
+            function swapIn() {
+                if (gen !== swapGen) {
+                    return;
+                }
+                current = idx;
+                applyActiveLayer(hiddenEl === layerA);
+            }
+
+            function afterBitmapReady() {
+                if (gen !== swapGen) {
+                    return;
+                }
+                if (typeof hiddenEl.decode === 'function') {
+                    hiddenEl.decode().then(swapIn).catch(swapIn);
+                } else {
+                    swapIn();
+                }
+            }
+
+            hiddenEl.onload = null;
+            hiddenEl.src = url;
+            if (hiddenEl.complete && hiddenEl.naturalWidth > 0) {
+                requestAnimationFrame(afterBitmapReady);
+            } else {
+                hiddenEl.onload = function () {
+                    hiddenEl.onload = null;
+                    afterBitmapReady();
+                };
+            }
+        }
+
+        var headerOffset = 80;
+        var pinScrollVh = 5.5;
+
+        function mountScroll() {
+            ScrollTrigger.create({
+                id: 'hero-frame-scrub',
+                trigger: '#hero',
+                start: function () {
+                    return 'top ' + headerOffset + 'px';
+                },
+                end: function () {
+                    return '+=' + window.innerHeight * pinScrollVh;
+                },
+                pin: true,
+                pinSpacing: true,
+                anticipatePin: 1,
+                scrub: 1.15,
+                invalidateOnRefresh: true,
+                onUpdate: function (self) {
+                    var max = frames.length - 1;
+                    var idx = Math.round(self.progress * max);
+                    setFrame(idx);
+                }
+            });
+        }
+
+        var pending = frames.length;
+        frames.forEach(function (src) {
+            var im = new Image();
+            function done() {
+                pending -= 1;
+                if (pending === 0) {
+                    mountScroll();
+                    ScrollTrigger.refresh();
+                }
+            }
+            im.onload = done;
+            im.onerror = done;
+            im.src = src;
+        });
+    }
+
+    /**
+     * Hero SVG headline: fade/slide with the same scroll range as the pinned frame scrub (when present).
+     */
+    function initHeroSvgText() {
+        var svgRoot = document.querySelector('#hero .hero-svg-text');
+        if (!svgRoot) {
+            return;
+        }
+        var line1 = svgRoot.querySelector('.hero-svg-line--1');
+        var line2 = svgRoot.querySelector('.hero-svg-line--2');
+        if (!line1 || !line2) {
+            return;
+        }
+
+        var headerOffset = 80;
+        var pinScrollVh = 5.5;
+        var hero = document.getElementById('hero');
+        var hasFrames = hero && hero.classList.contains('hero-section--frames');
+
+        gsap.set(line1, { opacity: 0, y: 56 });
+        gsap.set(line2, { opacity: 0, y: 36 });
+
+        gsap.timeline({
+            scrollTrigger: {
+                trigger: '#hero',
+                start: 'top ' + headerOffset + 'px',
+                end: function () {
+                    if (hasFrames) {
+                        return '+=' + window.innerHeight * pinScrollVh;
+                    }
+                    return 'bottom 75%';
+                },
+                scrub: 1.15,
+                invalidateOnRefresh: true
+            }
+        })
+            .to(line1, { opacity: 1, y: 0, duration: 0.45, ease: 'none' }, 0)
+            .to(line2, { opacity: 1, y: 0, duration: 0.45, ease: 'none' }, 0.14);
     }
 
     /**

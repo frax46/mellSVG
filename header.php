@@ -245,18 +245,17 @@
                     </svg>
                 </button>
                 <div class="offer-modal-body">
-                    <div class="offer-modal-icon">
+                    <!-- <div class="offer-modal-icon">
                         <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                    </div>
-                    <h2 class="offer-modal-title">🎄 CHRISTMAS OFFER 🎄</h2>
-                    <p class="offer-modal-message">Enjoy £5 OFF orders over £30 on our website!</p>
-                    <p class="offer-modal-message">Use Code: GreenBells5</p>
-                    <p class="offer-modal-message">(Valid until 31 December)</p>
+                    </div> -->
+                    <h2 class="offer-modal-title">Are you ready to begin a ritual that restores the balance between nature and beauty?</h2>
+                    <p class="offer-modal-message">Discover Mell Luxe!</p>
+                    
                    
                     <a href="<?php echo esc_url(home_url('/product-category/all-products/')); ?>" class="offer-modal-button">
-                        Shop Now <span>→</span>
+                        Shop Now<span>→</span>
                     </a>
                 </div>
             </div>

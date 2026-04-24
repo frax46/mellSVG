@@ -136,8 +136,7 @@ get_header(); ?>
                             <h2><?php esc_html_e( 'Cart Total', 'mellluxe' ); ?></h2>
                             
                             <?php 
-                            // Remove the proceed to checkout action temporarily
-                            remove_action( 'woocommerce_proceed_to_checkout', 'woocommerce_button_proceed_to_checkout', 20 );
+                            // Display cart totals table
                             woocommerce_cart_totals(); 
                             ?>
                             
@@ -145,11 +144,25 @@ get_header(); ?>
                                 <p><?php esc_html_e( 'Includes £2.99 for standard shipping. (You can choose a different delivery method at checkout.)', 'mellluxe' ); ?></p>
                             </div>
                             
+                            <?php
+                            // Use the standard WooCommerce proceed to checkout wrapper
+                            // This is where payment buttons (Google Pay, Apple Pay) are typically displayed
+                            ?>
                             <div class="wc-proceed-to-checkout">
+                                <?php
+                                // This hook is critical for payment buttons - payment gateways hook into this
+                                do_action( 'woocommerce_proceed_to_checkout' );
+                                ?>
+                                
                                 <a href="<?php echo esc_url( wc_get_checkout_url() ); ?>" class="checkout-button button alt wc-forward">
                                     <?php esc_html_e( 'Proceed to checkout', 'woocommerce' ); ?>
                                 </a>
                             </div>
+                            
+                            <?php
+                            // Additional hook for payment buttons after cart totals
+                            do_action( 'woocommerce_after_cart_totals' );
+                            ?>
                         </div>
                         <button type="submit" class="button update-cart-button" name="update_cart" value="<?php esc_attr_e( 'Update cart', 'woocommerce' ); ?>" disabled><?php esc_html_e( 'Update cart', 'woocommerce' ); ?></button>
                     </div>
