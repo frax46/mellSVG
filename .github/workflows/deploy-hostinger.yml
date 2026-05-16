@@ -1,0 +1,51 @@
+name: Deploy theme to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: hostinger-theme-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy WordPress theme
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate PHP syntax
+        shell: bash
+        run: |
+          find . -type f -name '*.php' \
+            -not -path './node_modules/*' \
+            -print0 | xargs -0 -n1 php -l
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.HOSTINGER_SSH_PRIVATE_KEY }}" > ~/.ssh/hostinger_deploy_key
+          chmod 600 ~/.ssh/hostinger_deploy_key
+          ssh-keyscan -p "${{ secrets.HOSTINGER_SSH_PORT }}" "${{ secrets.HOSTINGER_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy theme files
+        shell: bash
+        run: |
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude 'playwright-report/' \
+            --exclude 'test-results/' \
+            --exclude 'blob-report/' \
+            --exclude 'playwright/.cache/' \
+            --exclude '.DS_Store' \
+            -e "ssh -i ~/.ssh/hostinger_deploy_key -p ${{ secrets.HOSTINGER_SSH_PORT }}" \
+            ./ "${{ secrets.HOSTINGER_SSH_USER }}@${{ secrets.HOSTINGER_SSH_HOST }}:${{ secrets.HOSTINGER_THEME_PATH }}/"
