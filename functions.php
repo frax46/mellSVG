@@ -56,7 +56,7 @@ function mellluxe_scripts() {
     wp_enqueue_script('mellluxe-script', get_template_directory_uri() . '/js/theme.js', array('gsap', 'gsap-scrolltrigger'), '1.0.0', true);
     
     // Offer Modal JavaScript
-    wp_enqueue_script('mellluxe-offer-modal', get_template_directory_uri() . '/js/offer-modal.js', array(), '1.0.0', true);
+    wp_enqueue_script('mellluxe-offer-modal', get_template_directory_uri() . '/js/offer-modal.js', array(), filemtime(get_template_directory() . '/js/offer-modal.js'), true);
     
     // Localize script for AJAX
     wp_localize_script('mellluxe-script', 'mellluxe_ajax', array(
@@ -807,16 +807,268 @@ function mellluxe_marketing_cookies_enabled() {
 } 
 
 /**
+ * SEO helpers and structured data.
+ */
+function mellluxe_seo_site_name() {
+    return 'Mell Luxe';
+}
+
+function mellluxe_seo_default_description() {
+    return 'Discover Mell Luxe luxury vegan skincare, bath and body care, botanicals, facial oils and self-care gifts handcrafted with natural ingredients in the UK.';
+}
+
+function mellluxe_seo_page_description() {
+    if (is_front_page() || is_home()) {
+        return mellluxe_seo_default_description();
+    }
+
+    if (function_exists('is_shop') && is_shop()) {
+        return 'Shop Mell Luxe luxury vegan skincare, botanical bath and body products, facial oils, bath salts and self-care gift sets.';
+    }
+
+    if (function_exists('is_product') && is_product()) {
+        global $post;
+        $excerpt = $post ? ($post->post_excerpt ?: $post->post_content) : '';
+        return wp_trim_words(wp_strip_all_tags($excerpt), 28, '');
+    }
+
+    if (is_page('gift-card')) {
+        return 'Explore Mell Luxe gift sets and thoughtful self-care presents for luxury vegan skincare, bath rituals and botanical beauty lovers.';
+    }
+
+    if (is_page('botanics')) {
+        return 'Learn about the natural botanicals, vegan ingredients and plant-powered care behind Mell Luxe skincare and wellness rituals.';
+    }
+
+    if (is_page('about')) {
+        return 'Meet Mell Luxe, a UK luxury vegan beauty brand creating natural skincare, bath and body products with sustainable care.';
+    }
+
+    if (is_page('blog') || is_archive()) {
+        return 'Read Mell Luxe skincare tips, botanical beauty guidance and wellness rituals for natural vegan self-care.';
+    }
+
+    if (is_singular()) {
+        global $post;
+        $source = has_excerpt($post) ? get_the_excerpt($post) : get_post_field('post_content', $post);
+        return wp_trim_words(wp_strip_all_tags($source), 28, '');
+    }
+
+    return mellluxe_seo_default_description();
+}
+
+function mellluxe_seo_image_url() {
+    if (is_singular() && has_post_thumbnail()) {
+        $image = wp_get_attachment_image_src(get_post_thumbnail_id(), 'large');
+        if (!empty($image[0])) {
+            return $image[0];
+        }
+    }
+
+    if (function_exists('is_product') && is_product()) {
+        global $product;
+        if ($product && $product->get_image_id()) {
+            $image = wp_get_attachment_image_src($product->get_image_id(), 'large');
+            if (!empty($image[0])) {
+                return $image[0];
+            }
+        }
+    }
+
+    return get_template_directory_uri() . '/images/System Images/new-logo.png';
+}
+
+function mellluxe_seo_canonical_url() {
+    if (function_exists('is_shop') && is_shop()) {
+        return wc_get_page_permalink('shop');
+    }
+
+    if (is_singular()) {
+        return get_permalink();
+    }
+
+    if (is_front_page() || is_home()) {
+        return home_url('/');
+    }
+
+    if (is_tax() || is_category() || is_tag()) {
+        $term_link = get_term_link(get_queried_object());
+        return is_wp_error($term_link) ? home_url('/') : $term_link;
+    }
+
+    return home_url(add_query_arg(array(), $GLOBALS['wp']->request ?? ''));
+}
+
+function mellluxe_document_title_parts($title) {
+    $site = mellluxe_seo_site_name();
+
+    if (is_front_page() || is_home()) {
+        $title['title'] = 'Luxury Vegan Skincare, Botanicals & Self-Care Gifts';
+        $title['site'] = $site;
+        return $title;
+    }
+
+    if (function_exists('is_shop') && is_shop()) {
+        $title['title'] = 'Shop Luxury Vegan Skincare & Bath Rituals';
+        $title['site'] = $site;
+        return $title;
+    }
+
+    $title['site'] = $site;
+    return $title;
+}
+add_filter('document_title_parts', 'mellluxe_document_title_parts');
+
+function mellluxe_output_seo_meta() {
+    if (is_admin()) {
+        return;
+    }
+
+    $site_name = mellluxe_seo_site_name();
+    $title = wp_get_document_title();
+    $description = mellluxe_seo_page_description();
+    $canonical = mellluxe_seo_canonical_url();
+    $image = mellluxe_seo_image_url();
+    $type = is_singular('post') ? 'article' : 'website';
+    ?>
+    <meta name="description" content="<?php echo esc_attr($description); ?>">
+    <link rel="canonical" href="<?php echo esc_url($canonical); ?>">
+    <meta property="og:locale" content="<?php echo esc_attr(str_replace('-', '_', get_bloginfo('language'))); ?>">
+    <meta property="og:type" content="<?php echo esc_attr($type); ?>">
+    <meta property="og:site_name" content="<?php echo esc_attr($site_name); ?>">
+    <meta property="og:title" content="<?php echo esc_attr($title); ?>">
+    <meta property="og:description" content="<?php echo esc_attr($description); ?>">
+    <meta property="og:url" content="<?php echo esc_url($canonical); ?>">
+    <meta property="og:image" content="<?php echo esc_url($image); ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?php echo esc_attr($title); ?>">
+    <meta name="twitter:description" content="<?php echo esc_attr($description); ?>">
+    <meta name="twitter:image" content="<?php echo esc_url($image); ?>">
+    <?php
+}
+add_action('wp_head', 'mellluxe_output_seo_meta', 5);
+
+function mellluxe_output_structured_data() {
+    if (is_admin()) {
+        return;
+    }
+
+    $site_name = mellluxe_seo_site_name();
+    $home = home_url('/');
+    $logo = get_template_directory_uri() . '/images/System Images/new-logo.png';
+    $schema = array(
+        array(
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            '@id' => trailingslashit($home) . '#organization',
+            'name' => $site_name,
+            'url' => $home,
+            'logo' => $logo,
+            'description' => mellluxe_seo_default_description(),
+            'sameAs' => array(
+                'https://www.instagram.com/mell_luxe/',
+                'https://facebook.com/61563792317066',
+                'https://www.tiktok.com/@mell.luxe',
+                'https://mellluxe.etsy.com'
+            )
+        ),
+        array(
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            '@id' => trailingslashit($home) . '#website',
+            'name' => $site_name,
+            'url' => $home,
+            'publisher' => array('@id' => trailingslashit($home) . '#organization'),
+            'potentialAction' => array(
+                '@type' => 'SearchAction',
+                'target' => home_url('/?s={search_term_string}&post_type=product'),
+                'query-input' => 'required name=search_term_string'
+            )
+        )
+    );
+
+    if (!is_front_page()) {
+        $items = array(
+            array(
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => $home
+            ),
+            array(
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => wp_strip_all_tags(get_the_title() ?: wp_get_document_title()),
+                'item' => mellluxe_seo_canonical_url()
+            )
+        );
+
+        $schema[] = array(
+            '@context' => 'https://schema.org',
+            '@type' => 'BreadcrumbList',
+            'itemListElement' => $items
+        );
+    }
+
+    if (function_exists('is_product') && is_product()) {
+        global $product;
+        if ($product) {
+            $product_schema = array(
+                '@context' => 'https://schema.org',
+                '@type' => 'Product',
+                'name' => $product->get_name(),
+                'description' => mellluxe_seo_page_description(),
+                'image' => mellluxe_seo_image_url(),
+                'sku' => $product->get_sku() ?: $product->get_id(),
+                'brand' => array(
+                    '@type' => 'Brand',
+                    'name' => $site_name
+                )
+            );
+
+            if ($product->get_price() !== '') {
+                $product_schema['offers'] = array(
+                    '@type' => 'Offer',
+                    'url' => get_permalink($product->get_id()),
+                    'priceCurrency' => get_woocommerce_currency(),
+                    'price' => $product->get_price(),
+                    'availability' => $product->is_in_stock() ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                    'itemCondition' => 'https://schema.org/NewCondition'
+                );
+            }
+
+            $schema[] = $product_schema;
+        }
+    }
+
+    echo '<script type="application/ld+json">' . wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+}
+add_action('wp_head', 'mellluxe_output_structured_data', 20);
+
+function mellluxe_robots_directives($robots) {
+    $robots['max-image-preview'] = 'large';
+    $robots['max-snippet'] = -1;
+    $robots['max-video-preview'] = -1;
+
+    if (is_search()) {
+        $robots['noindex'] = true;
+    }
+
+    return $robots;
+}
+add_filter('wp_robots', 'mellluxe_robots_directives');
+
+/**
  * Output favicon in head - improved version with Edge support
  */
 function mellluxe_favicon_output() {
     // Get the favicon from WordPress customizer
     $favicon = get_theme_mod('mellluxe_favicon');
     
-    // Add cache-busting parameter for Edge
-    $cache_buster = '?v=' . time();
-    
     if ($favicon) {
+        $favicon_id = attachment_url_to_postid($favicon);
+        $cache_buster = $favicon_id ? '?v=' . get_post_modified_time('U', true, $favicon_id) : '';
+
         // Output the custom favicon from WordPress settings with multiple formats for Edge
         echo '<link rel="icon" type="image/x-icon" href="' . esc_url($favicon) . $cache_buster . '">' . "\n";
         echo '<link rel="icon" type="image/png" href="' . esc_url($favicon) . $cache_buster . '">' . "\n";
@@ -831,14 +1083,13 @@ function mellluxe_favicon_output() {
             echo '<link rel="apple-touch-icon" href="' . esc_url($favicon) . $cache_buster . '">' . "\n";
         }
         
-        // Debug output (remove this after testing)
-        echo '<!-- Favicon Debug: ' . esc_url($favicon) . ' -->' . "\n";
     } else {
         // Fallback to default favicon if none is set
         $default_favicon = get_template_directory_uri() . '/images/favicon.ico';
+        $default_favicon_path = get_template_directory() . '/images/favicon.ico';
+        $cache_buster = file_exists($default_favicon_path) ? '?v=' . filemtime($default_favicon_path) : '';
         echo '<link rel="icon" type="image/x-icon" href="' . esc_url($default_favicon) . $cache_buster . '">' . "\n";
         echo '<link rel="shortcut icon" href="' . esc_url($default_favicon) . $cache_buster . '">' . "\n";
-        echo '<!-- Favicon Debug: No custom favicon set, using default -->' . "\n";
     }
 }
 add_action('wp_head', 'mellluxe_favicon_output'); 

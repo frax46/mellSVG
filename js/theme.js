@@ -388,7 +388,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        var headerOffset = 80;
+        var header = document.querySelector('.site-header');
+        var headerOffset = header ? Math.round(header.getBoundingClientRect().height) : 80;
         var pinScrollVh = 5.5;
 
         function mountScroll() {
@@ -444,13 +445,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        var headerOffset = 80;
+        var header = document.querySelector('.site-header');
+        var headerOffset = header ? Math.round(header.getBoundingClientRect().height) : 80;
         var pinScrollVh = 5.5;
         var hero = document.getElementById('hero');
         var hasFrames = hero && hero.classList.contains('hero-section--frames');
 
-        gsap.set(line1, { opacity: 0, y: 56 });
-        gsap.set(line2, { opacity: 0, y: 36 });
+        gsap.set(line1, { opacity: 1, y: 0 });
+        gsap.set(line2, { opacity: 1, y: 0 });
 
         gsap.timeline({
             scrollTrigger: {

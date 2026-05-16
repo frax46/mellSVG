@@ -18,7 +18,17 @@
 
     // Storage key for tracking when modal was last shown
     const STORAGE_KEY = 'mellluxe_offer_modal_last_shown';
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const MODAL_DELAY_MS = 8000;
+    const SUPPRESS_SELECTORS = [
+        '#cart-toggle',
+        '#woocommerce-product-search-field',
+        '.search-field',
+        '.nav-login-link',
+        '.mobile-menu-toggle',
+        '.mobile-search-toggle',
+        '.cart-link'
+    ].join(',');
+    let showModalTimer = null;
 
     /**
      * Get today's date as a string (YYYY-MM-DD format)
@@ -68,6 +78,9 @@
      */
     function showModal() {
         if (!offerModal) return;
+        if (document.body.classList.contains('cart-sidebar-open') || document.body.classList.contains('search-open')) {
+            return;
+        }
 
         // Add active class to trigger CSS animations
         offerModal.classList.add('active');
@@ -93,16 +106,42 @@
     }
 
     /**
+     * Prevent the promotional modal from interrupting an active shopping/navigation task.
+     */
+    function suppressModalForToday() {
+        if (showModalTimer) {
+            clearTimeout(showModalTimer);
+            showModalTimer = null;
+        }
+
+        if (!offerModal.classList.contains('active')) {
+            saveModalShownDate();
+        }
+    }
+
+    /**
      * Initialize the modal
      */
     function initOfferModal() {
         // Check if modal should be shown
         if (shouldShowModal()) {
-            // Small delay to ensure page is loaded
-            setTimeout(() => {
+            showModalTimer = setTimeout(() => {
                 showModal();
-            }, 500);
+                showModalTimer = null;
+            }, MODAL_DELAY_MS);
         }
+
+        document.addEventListener('pointerdown', (e) => {
+            if (e.target && e.target.closest(SUPPRESS_SELECTORS)) {
+                suppressModalForToday();
+            }
+        }, true);
+
+        document.addEventListener('focusin', (e) => {
+            if (e.target && e.target.closest(SUPPRESS_SELECTORS)) {
+                suppressModalForToday();
+            }
+        }, true);
 
         // Close button event
         if (offerModalClose) {

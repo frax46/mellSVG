@@ -94,7 +94,7 @@ test.describe('WooCommerce — shop, cart, checkout', () => {
   });
 
   test('checkout page loads or redirects to cart when empty', async ({ page }) => {
-    await page.goto('/checkout');
+    await page.goto('/checkout', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('body')).toBeVisible();
     const url = page.url();
     if (url.includes('cart')) {
@@ -109,19 +109,20 @@ test.describe('WooCommerce — shop, cart, checkout', () => {
 });
 
 test.describe('Content pages', () => {
-  test('gift card, botanics, about, blog pages render main content', async ({ page }) => {
-    const pages: { path: string; check: RegExp }[] = [
-      { path: '/gift-card', check: /gift|mell/i },
-      { path: '/botanics', check: /botan|mell/i },
-      { path: '/about', check: /about|mell/i },
-      { path: '/blog', check: /blog|post|mell/i },
-    ];
-    for (const { path, check } of pages) {
-      await page.goto(path);
+  const pages: { path: string; check: RegExp }[] = [
+    { path: '/gift-card', check: /gift|mell/i },
+    { path: '/botanics', check: /botan|mell/i },
+    { path: '/about', check: /about|mell/i },
+    { path: '/blog', check: /blog|post|mell/i },
+  ];
+
+  for (const { path, check } of pages) {
+    test(`${path} renders main content`, async ({ page }) => {
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('#page').first()).toBeVisible();
       await expect(page.locator('body')).toContainText(check);
-    }
-  });
+    });
+  }
 });
 
 test.describe('Optional authenticated flow', () => {

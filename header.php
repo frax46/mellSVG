@@ -21,8 +21,8 @@
                     <span class="hamburger-line"></span>
                     <span class="hamburger-line"></span>
                 </button>
-                <img class="header-logo" src="<?php echo get_template_directory_uri(); ?>/images/System Images/new-logo.png"
-                    alt="<?php bloginfo('name'); ?>">
+                <img class="header-logo" src="<?php echo esc_url(get_template_directory_uri() . '/images/System Images/new-logo.png'); ?>"
+                    alt="<?php echo esc_attr__('Mell Luxe luxury vegan skincare', 'mellluxe'); ?>">
                 <!-- Mobile Search Toggle -->
                 <button class="mobile-search-toggle" aria-label="Toggle search" aria-expanded="false">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -38,8 +38,8 @@
                             ?>
                             <div class="site-logo">
                                 <a href="<?php echo esc_url(home_url('/')); ?>" rel="home">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/images/System Images/new-logo.png"
-                                        alt="<?php bloginfo('name'); ?>">
+                                    <img src="<?php echo esc_url(get_template_directory_uri() . '/images/System Images/new-logo.png'); ?>"
+                                        alt="<?php echo esc_attr__('Mell Luxe luxury vegan skincare', 'mellluxe'); ?>">
                                 </a>
                             </div>
                             <?php
@@ -51,7 +51,7 @@
                             <li><a href="/">Home</a></li>
                             <?php if (class_exists('WooCommerce')): ?>
                             <li class="menu-item-has-children categories-menu">
-                                <a href="#" class="categories-toggle">Shop</a>
+                                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" class="categories-toggle">Shop</a>
                                 <div class="categories-dropdown">
                                     <div class="categories-content">
                                         <?php
@@ -122,7 +122,7 @@
                         <!-- Shopping Cart -->
                         <div class="header-cart">
                             <?php if (class_exists('WooCommerce')): ?>
-                                <a href="#" class="cart-link" id="cart-toggle">
+                                <a href="<?php echo esc_url(wc_get_cart_url()); ?>" class="cart-link" id="cart-toggle" aria-label="<?php echo esc_attr__('Open shopping cart', 'mellluxe'); ?>">
                                     <div class="cart-icon">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                             xmlns="http://www.w3.org/2000/svg">
