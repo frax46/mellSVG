@@ -256,7 +256,7 @@ get_header( 'shop' ); ?>
 <div id="imageModal" class="image-modal">
     <div class="modal-content">
         <span class="close-modal">&times;</span>
-        <img class="modal-image" id="modalImage">
+        <img class="modal-image" id="modalImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Expanded product image">
         <div class="modal-nav">
             <button class="prev-modal">❮</button>
             <button class="next-modal">❯</button>
